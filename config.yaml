@@ -1,4 +1,6 @@
-url_template: https://rabota.by/search/vacancy?ored_clusters=true&area=1002&professional_role={role}&search_field=name&search_field=company_name&search_field=description&text=&enable_snippets=false&page={page}
+professional_roles_url: https://api.hh.ru/professional_roles
+vacancies_search_url: https://api.hh.ru/vacancies?area=1002&professional_role={professional_role}&page={page}&per_page=50
+vacancy_url: https://api.hh.ru/vacancies/{vacancy_id}
 headers:
   User-Agent: Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36
-datadir: D:/Learning/CarParser/data
+datadir: D:/Projects/HHParser/data

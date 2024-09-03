@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Type, TypeVar
 
 from src.models import (
     Role,
@@ -8,15 +8,21 @@ from src.models import (
     VacancySkills,
     Language,
     VacancyLanguages,
+    VacancyAssociationTable,
+)
+
+from src.db import Database, NamedModelType
+
+VacancyAssociationType = TypeVar(
+    "VacancyAssociationType", bound=VacancyAssociationTable
 )
 
 
 class RoleLoader:
-    def __init__(self, config, db):
-        self.config = config
+    def __init__(self, db: Database) -> None:
         self.db = db
 
-    def load(self, professional_roles):
+    def load(self, professional_roles: List[Dict]) -> None:
         role_ids = self.db.select_source_ids(Role)
 
         professional_role_models = []
@@ -30,67 +36,74 @@ class RoleLoader:
 
 
 class VacancyLoader:
-    def __init__(self, config, db):
-        self.config = config
+    def __init__(self, db: Database) -> None:
         self.db = db
 
-    def _get_vacancy_roles(self, vacancies) -> Dict:
-        roles_dict = {}
+    def _get_unique_items(
+        self, vacancies: List[Dict], items_key: str, item_key: str
+    ) -> List:
+        items = set()
 
         for vacancy in vacancies:
-            role_ids = []
-            roles = vacancy.get("professional_roles")
-            for role in roles:
-                role_ids.append(role["id"])
-            roles_dict[vacancy["id"]] = role_ids
+            vacancy_items = vacancy.get(items_key)
+            if vacancy_items is not None:
+                for item in vacancy_items:
+                    items.add(item[item_key])
+        return list(items)
 
-        return roles_dict
-
-    def _get_vacancy_skills(self, vacancies) -> Dict:
-        skills_dict = {}
-
-        for vacancy in vacancies:
-            skill_names = []
-            skills = vacancy.get("key_skills")
-            for skill in skills:
-                skill_names.append(skill["name"])
-            skills_dict[vacancy["id"]] = skill_names
-
-        return skills_dict
-
-    def _get_vacancy_languages(self, vacancies) -> Dict:
-        languages_dict = {}
+    def _get_vacancy_items(
+        self, vacancies: List[Dict], items_key: str, item_key: str
+    ) -> Dict:
+        items_dict = {}
 
         for vacancy in vacancies:
-            language_names = []
-            languages = vacancy.get("languages")
-            for language in languages:
-                language_names.append(language["name"])
-            languages_dict[vacancy["id"]] = language_names
+            items = []
+            vacancy_items = vacancy.get(items_key)
+            if vacancy_items is not None:
+                for vacancy_item in vacancy_items:
+                    items.append(vacancy_item[item_key])
+            items_dict[vacancy["id"]] = items
 
-        return languages_dict
+        return items_dict
 
-    def _get_unique_skills(self, vacancies) -> List:
-        skills = set()
+    def _load_new_vacancy_items(
+        self,
+        vacancies: List[Dict],
+        vacancy_map: Dict,
+        items_map: Dict,
+        items_key: str,
+        item_key: str,
+        model: Type[VacancyAssociationType],
+        model_field: str,
+    ) -> None:
+        items_by_vacancy = self._get_vacancy_items(
+            vacancies, items_key, item_key
+        )
+        vacancy_item_models = []
+        for vacancy in items_by_vacancy:
+            vacancy_id = vacancy_map.get(vacancy)
+            items = items_by_vacancy.get(vacancy)
+            if items is not None:
+                for item in items:
+                    item_id = items_map.get(item)
+                    row = {"vacancy_id": vacancy_id, model_field: item_id}
+                    vacancy_item_models.append(model(**row))
 
-        for vacancy in vacancies:
-            vacancy_skills = vacancy.get("key_skills")
-            if vacancy_skills is not None:
-                for skill in vacancy_skills:
-                    skills.add(skill["name"])
-        return list(skills)
+        self.db.insert(vacancy_item_models)
 
-    def _get_unique_languages(self, vacancies) -> List:
-        languages = set()
+    def _load_new_items(
+        self, items: List, model: Type[NamedModelType]
+    ) -> None:
+        item_names = self.db.select_names(model)
 
-        for vacancy in vacancies:
-            vacancy_languages = vacancy.get("languages")
-            if vacancy_languages is not None:
-                for language in vacancy_languages:
-                    languages.add(language["name"])
-        return list(languages)
+        item_models = []
+        for item in items:
+            if item not in item_names:
+                item_models.append(model(name=item))
 
-    def load(self, vacancies):
+        self.db.insert(item_models)
+
+    def load(self, vacancies: List[Dict]) -> None:
         vacancy_ids = self.db.select_source_ids(Vacancy)
 
         processed_vacancies = []
@@ -100,73 +113,29 @@ class VacancyLoader:
 
         self.db.insert(processed_vacancies)
 
-        vacancy_source_id_map = self.db.select_source_ids_map(Vacancy)
+        for items_key, item_key, named_model in [
+            ("key_skills", "name", Skill),
+            ("languages", "name", Language),
+        ]:
+            items = self._get_unique_items(vacancies, items_key, item_key)
+            self._load_new_items(items, named_model)
 
-        role_source_id_map = self.db.select_source_ids_map(Role)
+        vacancy_map = self.db.select_source_ids_map(Vacancy)
+        role_map = self.db.select_source_ids_map(Role)
+        skill_map = self.db.select_names_map(Skill)
+        lang_map = self.db.select_names_map(Language)
 
-        vacancy_roles = self._get_vacancy_roles(vacancies)
-        vacancy_role_models = []
-        for vacancy in vacancy_roles:
-            vacancy_id = vacancy_source_id_map.get(vacancy)
-            role_ids = vacancy_roles.get(vacancy)
-            for role_id in role_ids:
-                role_id = role_source_id_map.get(role_id)
-                vacancy_role_models.append(
-                    VacancyRoles(vacancy_id=vacancy_id, role_id=role_id)
-                )
-
-        self.db.insert(vacancy_role_models)
-
-        skills = self._get_unique_skills(vacancies)
-
-        skill_names = self.db.select_names(Skill)
-
-        skill_models = []
-        for skill in skills:
-            if skill not in skill_names:
-                skill_models.append(Skill(name=skill))
-
-        self.db.insert(skill_models)
-
-        vacancy_skill_map = self.db.select_names_map(Skill)
-
-        vacancy_skills = self._get_vacancy_skills(vacancies)
-        vacancy_skill_models = []
-        for vacancy in vacancy_skills:
-            vacancy_id = vacancy_source_id_map.get(vacancy)
-            skill_names = vacancy_skills.get(vacancy)
-            for skill_name in skill_names:
-                skill_id = vacancy_skill_map.get(skill_name)
-                vacancy_skill_models.append(
-                    VacancySkills(vacancy_id=vacancy_id, skill_id=skill_id)
-                )
-
-        self.db.insert(vacancy_skill_models)
-
-        languages = self._get_unique_languages(vacancies)
-
-        language_names = self.db.select_names(Language)
-
-        language_models = []
-        for language in languages:
-            if language not in language_names:
-                language_models.append(Language(name=language))
-
-        self.db.insert(language_models)
-
-        vacancy_language_map = self.db.select_names_map(Language)
-
-        vacancy_languages = self._get_vacancy_languages(vacancies)
-        vacancy_language_models = []
-        for vacancy in vacancy_languages:
-            vacancy_id = vacancy_source_id_map.get(vacancy)
-            language_names = vacancy_languages.get(vacancy)
-            for language_name in language_names:
-                language_id = vacancy_language_map.get(language_name)
-                vacancy_language_models.append(
-                    VacancyLanguages(
-                        vacancy_id=vacancy_id, language_id=language_id
-                    )
-                )
-
-        self.db.insert(vacancy_language_models)
+        for item_map, items_key, item_key, model, model_field in [
+            (role_map, "professional_roles", "id", VacancyRoles, "role_id"),
+            (skill_map, "key_skills", "name", VacancySkills, "skill_id"),
+            (lang_map, "languages", "name", VacancyLanguages, "language_id"),
+        ]:
+            self._load_new_vacancy_items(
+                vacancies,
+                vacancy_map,
+                item_map,
+                items_key,
+                item_key,
+                model,
+                model_field,
+            )

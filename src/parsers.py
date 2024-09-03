@@ -1,16 +1,19 @@
 import time
+from typing import List, Dict, Optional
+
 from tqdm import tqdm
 
 from src.utils import make_request
 from src.models import Vacancy
+from src.db import Database
 
 
 class RoleParser:
-    def __init__(self, config):
+    def __init__(self, config: Dict) -> None:
         self.config = config
-        self.professional_roles = []
+        self.professional_roles: List = []
 
-    def _parse_roles(self):
+    def _parse_roles(self) -> None:
         json_data = make_request(
             self.config["professional_roles_url"], self.config["headers"]
         )
@@ -21,17 +24,17 @@ class RoleParser:
         else:
             print("Can't get professional roles")
 
-    def run(self):
+    def run(self) -> None:
         self._parse_roles()
 
 
 class VacancyParser:
-    def __init__(self, config, db):
+    def __init__(self, config: Dict, db: Database) -> None:
         self.config = config
         self.db = db
-        self.vacancies = []
+        self.vacancies: List = []
 
-    def _parse_page_count(self, professional_role):
+    def _parse_page_count(self, professional_role: Dict) -> Optional[int]:
         url = self.config["vacancies_search_url"].format(
             professional_role=professional_role["id"], page=0
         )
@@ -43,7 +46,9 @@ class VacancyParser:
         else:
             return None
 
-    def _parse_vacancy_ids(self, db_vacancy_ids, professional_roles):
+    def _parse_vacancy_ids(
+        self, db_vacancy_ids: List, professional_roles: List
+    ) -> List:
         vacancy_ids = []
         for professional_role in tqdm(professional_roles):
             pages = self._parse_page_count(professional_role)
@@ -66,7 +71,7 @@ class VacancyParser:
                 print(f"Can't get page count for {professional_role['name']}")
         return vacancy_ids
 
-    def _parse_vacancies(self, vacancy_ids):
+    def _parse_vacancies(self, vacancy_ids: List) -> None:
         for vacancy_id in tqdm(vacancy_ids):
             url = self.config["vacancy_url"].format(vacancy_id=vacancy_id)
             json_data = make_request(url, headers=self.config["headers"])
@@ -77,7 +82,7 @@ class VacancyParser:
                 print(f"Can't get {url}")
                 time.sleep(2)
 
-    def run(self):
+    def run(self) -> None:
         source_ids = self.db.select_source_ids(Vacancy)
         roles = self.db.select_roles()
 

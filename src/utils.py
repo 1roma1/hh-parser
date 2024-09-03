@@ -1,6 +1,6 @@
 import time
 import json
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Optional
 
 import yaml
 import requests
@@ -8,14 +8,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
 
-def json_dump(filename: str, data: Union[List, Dict]):
+def json_dump(filename: str, data: Union[List, Dict]) -> None:
     """Dump data to json format and save to file"""
 
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f)
 
 
-def json_load(filename: str):
+def json_load(filename: str) -> Union[List, Dict]:
     """Load json data from file"""
 
     with open(filename, "r", encoding="utf-8") as f:
@@ -55,7 +55,9 @@ def get_db_connection_engine() -> Engine:
     return create_engine(conn_string)
 
 
-def make_request(url, headers, max_retries=5):
+def make_request(
+    url: str, headers: Dict, max_retries: int = 5
+) -> Optional[Dict]:
     for retry in range(max_retries):
         resp = requests.get(url, headers=headers)
         if resp.ok:

@@ -15,7 +15,7 @@ def main() -> None:
     role_loader = RoleLoader(db)
 
     role_parser.run()
-    role_loader.load(role_parser.professional_roles[:3])
+    role_loader.load(role_parser.professional_roles)
 
     vacancy_parser = VacancyParser(config, db)
     vacancy_parser.run()

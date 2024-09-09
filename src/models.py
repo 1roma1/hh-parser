@@ -96,7 +96,6 @@ class Vacancy(SourceIdModel):
 class Role(SourceIdModel):
     __tablename__ = "role"
 
-    source_id: Mapped[str | None] = mapped_column(String(20))
     name: Mapped[str | None] = mapped_column(String(120))
 
     vacancies: Mapped[List["VacancyRoles"]] = relationship(

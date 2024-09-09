@@ -54,7 +54,6 @@ class VacancyParser:
             pages = self._parse_page_count(professional_role)
 
             if pages is not None:
-                pages = 1
                 for page in range(pages):
                     url = self.config["vacancies_search_url"].format(
                         professional_role=professional_role["id"], page=page
@@ -64,7 +63,7 @@ class VacancyParser:
                         url, headers=self.config["headers"]
                     )
                     if json_data is not None:
-                        for vacancy in json_data["items"][:1]:
+                        for vacancy in json_data["items"]:
                             if vacancy["id"] not in db_vacancy_ids:
                                 vacancy_ids.append(vacancy["id"])
             else:

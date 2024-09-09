@@ -7,7 +7,6 @@ from sqlalchemy.engine.base import Engine
 from sqlalchemy.engine.result import Result
 
 from src.models import (
-    Base,
     Role,
     SourceIdModel,
     NamedModel,
@@ -21,12 +20,6 @@ NamedModelType = TypeVar("NamedModelType", bound=NamedModel)
 class Database:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
-
-    def create_all(self) -> None:
-        Base.metadata.create_all(bind=self.engine)
-
-    def drop_all(self) -> None:
-        Base.metadata.drop_all(bind=self.engine)
 
     def _select(self, statement: Executable) -> Result[Any]:
         with Session(self.engine) as session:

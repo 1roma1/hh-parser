@@ -4,3 +4,4 @@ data/
 *.db
 .env
 .vscode/
+.mypy_cache/

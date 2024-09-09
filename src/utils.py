@@ -1,3 +1,4 @@
+import os
 import time
 import json
 from typing import Union, List, Dict, Optional
@@ -31,26 +32,18 @@ def load_configuration(config_file: str) -> Dict:
     return config
 
 
-# def get_db_connection_engine(
-#     user: str = os.getenv("PG_USER"),
-#     pwd: str = os.getenv("PG_PASSWORD"),
-#     database: str = os.getenv("PG_DB"),
-#     host: str = os.getenv("PG_HOST"),
-#     port: str = os.getenv("PG_PORT"),
-# ) -> Engine:
-#     """Create database connection engine"""
-
-#     conn_string = (
-#         f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{database}"
-#     )
-
-#     return create_engine(conn_string)
-
-
-def get_db_connection_engine() -> Engine:
+def get_db_connection_engine(
+    user: str = os.getenv("PG_USER"),
+    pwd: str = os.getenv("PG_PASSWORD"),
+    database: str = os.getenv("PG_DB"),
+    host: str = os.getenv("PG_HOST"),
+    port: str = os.getenv("PG_PORT"),
+) -> Engine:
     """Create database connection engine"""
 
-    conn_string = "sqlite:///db.db"
+    conn_string = (
+        f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{database}"
+    )
 
     return create_engine(conn_string)
 

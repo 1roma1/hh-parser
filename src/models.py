@@ -43,7 +43,7 @@ class Vacancy(SourceIdModel):
 
     title: Mapped[str | None] = mapped_column(String(120))
     description: Mapped[str | None] = mapped_column(Text())
-    company: Mapped[str | None] = mapped_column(String(50))
+    company: Mapped[str | None] = mapped_column(String(160))
     employment: Mapped[str | None] = mapped_column(String(30))
     experience: Mapped[str | None] = mapped_column(String(30))
     salary: Mapped[str | None] = mapped_column(String(40))

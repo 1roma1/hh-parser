@@ -9,8 +9,6 @@ def main() -> None:
     engine = get_db_connection_engine()
 
     db = Database(engine)
-    db.drop_all()
-    db.create_all()
 
     role_parser = RoleParser(config)
 

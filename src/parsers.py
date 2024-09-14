@@ -66,6 +66,7 @@ class VacancyParser:
                         for vacancy in json_data["items"]:
                             if vacancy["id"] not in db_vacancy_ids:
                                 vacancy_ids.append(vacancy["id"])
+                    time.sleep(0.5)
             else:
                 print(f"Can't get page count for {professional_role['name']}")
         return vacancy_ids
@@ -76,7 +77,7 @@ class VacancyParser:
             json_data = make_request(url, headers=self.config["headers"])
             if json_data is not None:
                 self.vacancies.append(json_data)
-                time.sleep(0.3)
+                time.sleep(0.5)
             else:
                 print(f"Can't get {url}")
                 time.sleep(2)

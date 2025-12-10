@@ -41,16 +41,19 @@ def get_db_connection_engine(
 ) -> Engine:
     """Create database connection engine"""
 
-    conn_string = (
-        f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{database}"
-    )
+    if user is not None:
+        conn_string = (
+            f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{database}"
+        )
+    else:
+        conn_string = "sqlite:///database.db"
 
     return create_engine(conn_string)
 
 
 def make_request(
     url: str, headers: Dict, max_retries: int = 5
-) -> Optional[Dict]:
+) -> Optional[dict]:
     for retry in range(max_retries):
         resp = requests.get(url, headers=headers)
         if resp.ok:

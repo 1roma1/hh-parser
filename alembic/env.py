@@ -9,10 +9,18 @@ from src.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-connection_url = (
-    f"postgresql+psycopg2://{os.getenv('PG_USER')}:{os.getenv('PG_PASSWORD')}"
-    f"@{os.getenv('PG_HOST')}:{os.getenv('PG_PORT')}/{os.getenv('PG_DB')}"
-)
+# connection_url = (
+#     f"postgresql+psycopg2://{os.getenv('PG_USER')}:{os.getenv('PG_PASSWORD')}"
+#     f"@{os.getenv('PG_HOST')}:{os.getenv('PG_PORT')}/{os.getenv('PG_DB')}"
+# )
+
+if os.getenv("PG_USER") is not None:
+    connection_url = (
+        f"postgresql+psycopg2://{os.getenv('PG_USER')}:{os.getenv('PG_PASSWORD')}"
+        f"@{os.getenv('PG_HOST')}:{os.getenv('PG_PORT')}/{os.getenv('PG_DB')}"
+    )
+else:
+    connection_url = "sqlite:///database.db"
 config = context.config
 config.set_main_option("sqlalchemy.url", connection_url)
 

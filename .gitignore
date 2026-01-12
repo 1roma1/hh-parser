@@ -2,6 +2,6 @@ env/
 __pycache__/
 data/
 *.db
-.env
+.venv
 .vscode/
 .mypy_cache/

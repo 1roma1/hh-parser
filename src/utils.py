@@ -1,7 +1,7 @@
 import os
 import time
 import json
-from typing import Union, List, Dict, Optional
+from typing import Dict, Optional
 
 import yaml
 import requests
@@ -9,14 +9,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
 
-def json_dump(filename: str, data: Union[List, Dict]) -> None:
+def json_dump(filename: str, data: list | dict) -> None:
     """Dump data to json format and save to file"""
 
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f)
 
 
-def json_load(filename: str) -> Union[List, Dict]:
+def json_load(filename: str) -> list | dict:
     """Load json data from file"""
 
     with open(filename, "r", encoding="utf-8") as f:
@@ -52,7 +52,7 @@ def get_db_connection_engine(
 
 
 def make_request(
-    url: str, headers: Dict, max_retries: int = 5
+    url: str, headers: dict, max_retries: int = 5
 ) -> Optional[dict]:
     for retry in range(max_retries):
         resp = requests.get(url, headers=headers)
@@ -62,3 +62,7 @@ def make_request(
             print(f"{url} retry {retry}")
             time.sleep(0.5)
     return None
+
+
+def get_last_file_number(datadir: str) -> int:
+    return max([int(file[5 : len(file) - 5]) for file in os.listdir(datadir)])

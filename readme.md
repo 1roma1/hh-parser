@@ -1,14 +1,12 @@
 # HeadHunter Vacancy Parser
 
-The parser is developed to collect information about job vacancies in Minsk. \
-The parsed information is stored in a PostgreSQL database.
+The parser is developed to collect information about job vacancies in Minsk.
 
 ## Installing
 Commands for clonning repository and installing required dependencies\
 `mkdir HHParser && cd HHParser`\
 `git clone https://github.com/1roma1/HHParser.git .`\
-`python -m pip install --upgrade pip`\
-`pip install -r requirements.txt`
+`uv sync`
 
 Making migrations \
 `alembic upgrade head`

@@ -1,0 +1,13 @@
+[project]
+name = "hhparser"
+version = "0.1.0"
+description = "The parser is developed to collect information about job vacancies in Minsk."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "alembic>=1.18.0",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+    "sqlalchemy>=2.0.45",
+    "tqdm>=4.67.1",
+]
